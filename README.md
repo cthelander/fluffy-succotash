@@ -1,25 +1,17 @@
 # fluffy-succotash
 
-school_work file
-
-  Holds work from classes in school including:
-  
-  CS163 data structures
-  
-  CS202 object oriented programming
-  
-  CS321 and CS322 Language compiler design
-  
-  CS457 Functional Languages
-  
-  Graphics
+	<li>school_work file</li>
+	<li>Holds work from classes in school including:</li>
+	<li>CS163 data structures</li>
+	<li>CS202 object oriented programming</li>
+	<li>CS321 and CS322 Language compiler design</li>
+	<li>CS457 Functional Languages</li>
+	<li>Graphics</li>
 
 
-site
-  
-  a basic website that is in progress
+	<li>site</li>
+  	<li>a basic website that is in progress</li>
  
   
-exercises
-  
-  will hold practice exercises
+	<li>exercises</li>
+  	<li>will hold practice exercises</li>
