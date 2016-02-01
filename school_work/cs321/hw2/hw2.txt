@@ -1,0 +1,136 @@
+Carly Thelander
+CS321
+Homework 2 lexer
+1/30/2015
+
+
+Question 1:
+
+i) [4 Points] The following regular expressions will match integer
+values between zero and twenty three, inclusive.  The first
+requires that each number is written with exactly two digits,
+using leading zeros if necessary; the second does not allow
+leading zeros:
+
+00|01|02|03|04|05|06|07|08|09|10|11|12|13|14|15|16|17|18|19|20|21|22|23
+
+0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23
+
+Show how each of these two regular expressions can be reduced to
+more concise alternatives that match precisely the same input
+strings.
+
+
+    ([0-1][0-9])|(2[0-3])
+
+    [0-9]|(1[0-9])|(2[0-3])
+
+
+
+ii) [6 Points] Using the examples from Part (i) as a guide, if
+necessary, give regular expressions that match:
+
+    a) decimal integers from 00 to 59 with exactly two digits
+    (leading zeros allowed/required)
+
+    ([0-5][0-9])    
+
+    b) integers from 0 to 255, inclusive, with no leading zeros.
+    (The number zero, of course, must be written with a leading "0")
+
+    ([0-9])|([1-9)][0-9])|(1[0-9][0-9])|(2([0-4][0-9])|(5[0-5]))
+
+iii) [6 points] Draw diagrams illustrating (minimal) DFAs for the
+regular expressions/languages in (ii)(a) and (ii)(b).  To minimize
+clutter and keep the diagrams as simple as possible, you should:
+
+- label transitions with sets of possible input characters
+  when any of the characters in that set would lead to an
+  equivalent state;
+
+- omit looping or "stuck states" from your diagram.
+
+Be sure to label each accept state with the set of possible inputs
+that can be accepted at that point in the machine.
+you are expected to be able to answer this question by hand,
+relying on your intution.  You are NOT expected to work through
+the full formal process of deriving a DFA from an NFA for your
+regular expressions; indeed, you are strongly discouraged from
+attempting to do that!  You are, however, welcome to use a program
+like regexp.RegExpTest from the Lab 2 materials to help with this
+task if you find it convenient to do so.  But make sure that you
+understand how to do this kind of exercise by hand so that you
+would be able to answer questions like this if they were presented
+to you in an exam situation.
+
+iv) [8 points for the program; 6 points for testing]  Write a
+short program using jflex that you can use to test your answers
+for Part (ii).  Include some test output to illustrate that your
+regular expressions match input strings in the way that you
+expect.
+
+tcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+22252: not acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+25: acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+255: acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+260: not acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+00: not acceptedtcarly@ada:~/cs321/lexertour/03$ 
+
+//Carly Thelander regex 255 test
+
+// jflex Example.jflex 
+// javac Yylex.java
+// java Yylex test.mini
+
+/* user code */
+
+%%
+
+/* operations and declarations */
+%standalone
+
+%%
+
+/* lexical rules */
+
+(2([0-4][0-9]))|(2(5[0-5]))|(1[0-9][0-9])|([1-9][0-9])|([0-9]) { System.out.print(yytext()+": accepted"); }
+(2([0-4][0-9]))|(2(5[0-5]))|(1[0-9][0-9])|([1-9][0-9])|([0-9]).+ { System.out.print(yytext()+": not accepted"); }
+[a-z]+		        { System.out.print(yytext()+": not accepted"); }
+.|\n                {  }
+
+
+
+
+
+
+
+
+
+00: acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+23: acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+59: acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+107: not acceptedtcarly@ada:~/cs321/lexertour/03$ java Yylex test.mini
+60: not acceptedtcarly@ada:~/cs321/lexertour/03$ 
+
+// Carly Thelander 00-59 regex example
+
+// jflex Example.jflex 
+// javac Yylex.java
+// java Yylex test.mini
+
+/* user code */
+
+%%
+
+/* operations and declarations */
+%standalone
+
+%%
+
+/* lexical rules */
+
+[0-5][0-9]	     	{ System.out.print(yytext()+": accepted"); }
+[0-5][0-9].+		{ System.out.print(yytext()+": not accepted"); }
+[0-9]+	            { System.out.print(yytext()+": not accepted"); }
+[a-z]+	            { System.out.print(yytext()+": not accepted"); }
+.|\n                { }

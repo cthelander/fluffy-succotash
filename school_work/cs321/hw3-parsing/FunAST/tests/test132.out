@@ -1,0 +1,22 @@
+Function
+  int
+  "main"
+  Block
+    ExprStmt
+      Call
+        "hello"
+        Add
+          IntLit(1)
+          IntLit(2)
+        LAnd
+          IntLit(3)
+          Id("b")
+    Empty
+    ExprStmt
+      Call
+        "f"
+        Call
+          "g"
+          Id("x")
+          Id("y")
+    Empty

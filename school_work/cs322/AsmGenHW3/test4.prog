@@ -1,0 +1,18 @@
+// A little sample program, in concrete syntax
+// Tests for initGlobals function both given and not
+int i = 2;
+int x = 2 + 4;
+int y = x * x;
+int p = x + y;
+int m = -y;
+void main() {
+  
+ print i;
+ print x;  
+ print y; 
+ print p;
+ print m;
+ print i + p;
+
+}
+ 

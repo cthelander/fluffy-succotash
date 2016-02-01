@@ -1,0 +1,370 @@
+javacc Parser.jj
+Java Compiler Compiler Version 5.0 (Parser Generator)
+(type "javacc" with no arguments for help)
+Reading from file Parser.jj . . .
+File "TokenMgrError.java" is being rebuilt.
+File "ParseException.java" is being rebuilt.
+File "Token.java" is being rebuilt.
+File "SimpleCharStream.java" is being rebuilt.
+Parser generated successfully.
+javac Parser.java
+tests/test001: PASSED
+tests/test002: PASSED
+tests/test003: PASSED
+tests/test004: PASSED
+tests/test005: PASSED
+tests/test006: PASSED
+tests/test007: PASSED
+tests/test008: FAILED
+1,67c1
+< Function
+<   int
+<   "main"
+<   Block
+<     If
+<       Neq
+<         Call
+<           "factorial"
+<           IntLit(4)
+<         IntLit(24)
+<       Block
+<         Return
+<           IntLit(1)
+<       Block
+<         Return
+<           IntLit(0)
+< Function
+<   int
+<   "factorial"
+<   Formal
+<     int
+<     "n"
+<   Block
+<     If
+<       LOr
+<         Eql
+<           Id("n")
+<           IntLit(0)
+<         Eql
+<           Id("n")
+<           IntLit(1)
+<       Block
+<         Return
+<           IntLit(1)
+<     [no else branch]
+<     Return
+<       Mul
+<         Id("n")
+<         Call
+<           "factorial"
+<           Sub
+<             Id("n")
+<             IntLit(1)
+< Function
+<   int
+<   "binomial"
+<   Formal
+<     int
+<     "n"
+<   Formal
+<     int
+<     "j"
+<   Block
+<     Return
+<       Div
+<         Call
+<           "factorial"
+<           Id("n")
+<         Mul
+<           Call
+<             "factorial"
+<             Id("j")
+<           Call
+<             "factorial"
+<             Sub
+<               Id("n")
+<               Id("j")
+---
+> Invalid syntax at (11,30), 0
+
+tests/test009: PASSED
+tests/test101: PASSED
+tests/test102: PASSED
+tests/test103: PASSED
+tests/test104: PASSED
+tests/test105: PASSED
+tests/test106: PASSED
+tests/test107: PASSED
+tests/test108: PASSED
+tests/test109: PASSED
+tests/test110: PASSED
+tests/test111: PASSED
+tests/test112: PASSED
+tests/test113: PASSED
+tests/test114: PASSED
+tests/test115: FAILED
+1c1,58
+< Invalid syntax at (15,3), ,
+---
+> Globals
+>   int
+>   InitVarIntro
+>     "count"
+>     IntLit(0)
+> Function
+>   int
+>   "fact"
+>   Formal
+>     int
+>     "n"
+>   Block
+>     ExprStmt
+>       Assign
+>         "count"
+>         Add
+>           Id("count")
+>           IntLit(1)
+>     If
+>       Lt
+>         Id("n")
+>         IntLit(1)
+>       Return
+>         IntLit(1)
+>       Return
+>         Mul
+>           Id("n")
+>           Call
+>             "fact"
+>             Sub
+>               Id("n")
+>               IntLit(1)
+> Globals
+>   int
+>   InitVarIntro
+>     "x"
+>     Id("y")
+> Globals
+>   int
+>   InitVarIntro
+>     "y"
+>     IntLit(1)
+> Function
+>   void
+>   "main"
+>   Block
+>     Print
+>       Call
+>         "fact"
+>         IntLit(7)
+>     Print
+>       Call
+>         "fact"
+>         IntLit(3)
+>     Print
+>       Call
+>         "fact"
+>         Id("count")
+
+tests/test116: FAILED
+1c1,61
+< Invalid syntax at (26,3), ,
+---
+> Globals
+>   int
+>   InitVarIntro
+>     "count"
+>     IntLit(0)
+> Function
+>   int
+>   "fact"
+>   Formal
+>     int
+>     "n"
+>   Formal
+>     boolean
+>     "y"
+>   Block
+>     ExprStmt
+>       Assign
+>         "count"
+>         Add
+>           Id("count")
+>           IntLit(1)
+>     If
+>       Lt
+>         Id("n")
+>         IntLit(1)
+>       Return
+>         IntLit(1)
+>       Return
+>         Mul
+>           Id("n")
+>           Call
+>             "fact"
+>             Sub
+>               Id("n")
+>               IntLit(1)
+> Globals
+>   int
+>   InitVarIntro
+>     "x"
+>     Id("y")
+> Globals
+>   int
+>   InitVarIntro
+>     "y"
+>     IntLit(1)
+> Function
+>   void
+>   "main"
+>   Block
+>     Print
+>       Call
+>         "fact"
+>         IntLit(7)
+>     Print
+>       Call
+>         "fact"
+>         IntLit(3)
+>     Print
+>       Call
+>         "fact"
+>         Id("count")
+
+tests/test117: PASSED
+tests/test118: PASSED
+tests/test119: PASSED
+tests/test120: FAILED
+1c1,92
+< Invalid syntax at (15,4), ,
+---
+> Globals
+>   int
+>   InitVarIntro
+>     "count"
+>     IntLit(0)
+>   InitVarIntro
+>     "z"
+>     Id("q")
+>   VarIntro
+>     "f"
+>   VarIntro
+>     "f"
+> Function
+>   int
+>   "fact"
+>   Formal
+>     int
+>     "n"
+>   Formal
+>     boolean
+>     "y"
+>   Block
+>     ExprStmt
+>       Call
+>         "fact"
+>         IntLit(2)
+>         Sub
+>           Id("x")
+>           Id("y")
+>         IntLit(3)
+>     Empty
+>     ExprStmt
+>       Assign
+>         "count"
+>         Add
+>           Id("count")
+>           IntLit(1)
+>     If
+>       Lt
+>         Id("n")
+>         IntLit(1)
+>       Return
+>         IntLit(1)
+>       Return
+>         Mul
+>           Id("n")
+>           Call
+>             "fact"
+>             Sub
+>               Id("n")
+>               IntLit(1)
+>             Id("z")
+> Globals
+>   int
+>   InitVarIntro
+>     "x"
+>     Id("y")
+> Globals
+>   int
+>   InitVarIntro
+>     "y"
+>     IntLit(1)
+> Function
+>   void
+>   "main"
+>   Formal
+>     boolean
+>     "f"
+>   Formal
+>     boolean
+>     "z"
+>   Formal
+>     int
+>     "y"
+>   Block
+>     Print
+>       Call
+>         "fact"
+>         IntLit(7)
+>         IntLit(3)
+>     Print
+>       Call
+>         "fact"
+>         Id("x")
+>         IntLit(6)
+>         Id("r")
+>         Id("parsingIsFun")
+>     Print
+>       Call
+>         "fact"
+>         Id("count")
+>         Id("isItThough")
+
+tests/test121: PASSED
+tests/test122: FAILED
+25a26
+>     Empty
+
+tests/test123: PASSED
+tests/test124: FAILED
+36a37
+>     Empty
+
+tests/test125: PASSED
+tests/test126: PASSED
+tests/test127: FAILED
+14a15
+>     Empty
+
+tests/test128: FAILED
+1c1
+< Invalid syntax at (9,3), )
+---
+> Invalid syntax at (10,3), y
+
+tests/test129: PASSED
+tests/test130: PASSED
+tests/test131: PASSED
+tests/test132: FAILED
+13a14
+>     Empty
+20a22
+>     Empty
+
+tests/test133: FAILED
+1c1
+< Invalid syntax at (8,7), (
+---
+> Invalid syntax at (7,7), (
+

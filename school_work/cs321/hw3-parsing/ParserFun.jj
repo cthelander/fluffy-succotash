@@ -1,0 +1,124 @@
+PARSER_BEGIN(Parser)
+
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Top();
+       System.out.println("Valid syntax");
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+void Top(): { } {
+  LOOKAHEAD(3)
+  TopDefs() | Func() <EOF>
+}
+
+void TopDefs(): { } {
+    Stmt() 
+}
+
+void Func() : {} {
+ (LOOKAHEAD(4) (Type() | "void") <IDENT> Paren() Block()
+ |(Type() | "void") <IDENT> "("")" Block())
+}
+
+void Paren() : {} {
+    LOOKAHEAD(3)
+   "(" Type() <IDENT> ("," Type() <IDENT>)? ")" 
+   | Call()
+}
+
+void Call(): { } {
+   LOOKAHEAD(3)
+   (Type())? <IDENT> "("<IDENT>")" ";" | Stmt()
+}
+
+void Stmt(): {} { 
+      (Expr())? ";"
+    | Block()
+    | "while" "(" Expr() ")" Stmt()
+    | "if" (Expr()) Stmt() [LOOKAHEAD(2) "else" Stmt()]
+    | "print" Expr() ";"
+    | "return" [Expr()] ";"
+    | Type() <IDENT> ("=" Expr())? ("," Expr())* ";"
+}
+
+void Block(): { } {
+   "{" (Stmt())* "}"
+}
+
+void Expr(): { } {
+   LOOKAHEAD(2)
+   <IDENT> "=" Expr()
+  | Or() 
+}
+
+void Or(): { } {
+  And() ("||" And())*
+}
+
+void And(): { } {
+   Cmp() ("&&" Cmp())*
+}
+
+void Cmp(): { } {
+   Add()( ("<" Add())
+   | ("<=" Add())
+   | (">"  Add())
+   | (">=" Add())
+   | ("==" Add())
+   | ("!=" Add()))?
+}
+
+void Add(): { } {
+   Mult() (("+" Mult()) | ("-" Mult()))*
+}
+
+void Mult(): { } {
+   A() (("*" A())  | ("/" A()))*
+}
+
+void A(): { } {
+   "(" Expr() ")" | I()
+}
+
+void Type(): { } {
+   "int" | "boolean"
+}
+
+void I()   : { } { 
+  <INTLIT> | <IDENT>
+}
+
+//- Lexical Rules -----------------------------------------------------
+
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+| <"/*" (~["*"])* ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+// Lexemes that should be reported as valid tokens:
+
+TOKEN : {
+  <INTLIT :  (["0"-"9"])+>
+}
+
+TOKEN: {
+   <IDENT : ["a"-"z", "A"-"Z"] (["a"-"z","A"-"Z","0"-"9","_"])*>
+}

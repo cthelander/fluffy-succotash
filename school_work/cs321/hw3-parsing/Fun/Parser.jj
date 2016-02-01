@@ -1,0 +1,105 @@
+PARSER_BEGIN(Parser)
+
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Top();
+       System.out.println("Valid syntax");
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+void Top(): { } {
+    LOOKAHEAD(2)
+    TopDefs()|Func() <EOF> }
+void TopDefs(): { } {
+    Def() }
+void Func(): { } {
+    RetType() Name() Formals() Block() }
+void RetType(): { } {
+     "void" | Type() }
+void Name(): { } {
+    <IDENT> }
+void Formals(): { } { 
+    "("( Type() <IDENT> )*")" }
+void Stmt(): { } {
+    Def()  | 
+    (Prnt() ";")  | 
+    Block() | 
+    If()    | 
+    Whl()   | 
+    (Rtrn() ";")  | 
+    ((Expr()) ";") }
+void Def(): { } {
+    Type() <IDENT> ("=" Expr() ( ","  Expr())*)?";" }
+void Block(): { } {
+    "{" (Stmt())* "}" }
+void Type(): { } {
+    "int" | "boolean" }
+void If(): { } {
+    "if" "(" Com()")" Stmt()
+(LOOKAHEAD(1) "else" Stmt()) ? }
+void Whl(): { } {
+    "while" "(" Com() ")" Stmt() }
+void Prnt(): { } {
+    "print" Expr() }
+void Rtrn(): { } {
+    "return" Stmt() }
+void Expr(): { } {
+    LOOKAHEAD(2)
+    ( <IDENT> "=" Expr() ) | 
+    Or() }
+void Or(): { } {
+    And() ( "||" Or())? }
+void And(): { } {
+    Com() ( "&&" And())? }
+void Com(): { } {
+    SubAdd() (( "<" SubAdd()) | 
+    ( "<=" SubAdd()) | 
+    ( ">" SubAdd())  | 
+    ( ">=" SubAdd()) | 
+    ( "==" SubAdd()) | 
+    ("!=" SubAdd()))? }
+void SubAdd(): { } {
+    MulDiv() ( ("+" SubAdd()) | 
+    ("-" SubAdd()))? }
+void MulDiv(): { } {
+    Par() (("*" MulDiv()) | 
+    ("/" MulDiv()))? }
+void Par(): { } {
+    ( "(" Expr() ")")  |  
+    Id() }
+void Id(): { } {
+    <INTLIT> | <IDENT>
+}
+//- Lexical Rules -----------------------------------------------------
+
+
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+| <"/*" (~["*"])* ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+
+TOKEN : {
+  <INTLIT    : (["0"-"9"])+>
+}
+
+TOKEN : {
+  <IDENT : ["a"-"z", "A"-"Z"] (["a"-"z","A"-"Z","0"-"9"])*>
+}

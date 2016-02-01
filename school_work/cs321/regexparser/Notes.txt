@@ -1,0 +1,462 @@
+------------------------------------------------------------------------
+CS 321 Winter 2015 Lab 4                     Parsing Regular Expressions
+------------------------------------------------------------------------
+
+In this lab, we'll be working to build a lexer and parser for the simple
+language of regular expressions that is described by the following
+grammar:
+
+   regexp = "%"                  // matches the empty string
+          | LETTER               // a single letter, a-z
+          | regexp "|" regexp    // an alternative
+          | regexp regexp        // a sequence of two regexps
+          | regexp "*"           // a repetition (0 or more times)
+          | "(" regexp ")"       // a parenthesized regexp
+
+This lab will require a more hands on work, and less "tour" than the
+previous labs.  But everything that we do will center on the grammar
+shown above, so spend a little time to make sure you understand it
+before you move on ...
+
+This lab also returns to some of the material that we've seen more
+briefly in previous labs, such as quick glimpse of the regexp package
+in the Week 2 lab, and the introduction to JavaCC in Week 3.  You may
+find it useful to refer back to those labs as you work through this
+one, or at least to have copies of those materials close at hand.
+
+------------------------------------------------------------------------
+EXERCISE 1: Based on the grammar above, identify the different types of
+token that we will have to work with when we build a lexer for this
+language, providing a regular expression in each case.  (The language
+is simple, so do not expect this to be a complicated task!)
+
+letter      *       |       %       () 
+   a        a*      a|b     a|%     (a|b)|c 
+
+
+------------------------------------------------------------------------
+EXERCISE 2: Using examples from javacctour (the Week 3 lab) as your
+starting point, use javacc to construct a simple program that will read
+an arbitrary regular expression from standard input and output a
+corresponding list of token codes and images.  For convenience, you
+should allow the user to include whitespace (e.g., space, newline, and
+tab characters) in their input; your lexer should simply skip over
+any occurrences of these characters.
+
+
+
+
+------------------------------------------------------------------------
+EXERCISE 3: Your solution to EXERCISE 2 should treat all of the
+following strings as valid inputs (with one exception).  But which
+of them represent valid regular expressions, according to the grammar
+above?
+
+  a   a*   a|b   a+b   a*b   ab|c  a**   **a   (ab)*c   ((a))   ()
+
+For inputs that you think are valid, draw a corresponding parse tree.
+
+------------------------------------------------------------------------
+EXERCISE 4: Is the given grammar ambiguous or unambiguous?  How can you
+justify your answer?
+
+------------------------------------------------------------------------
+EXERCISE 5: Construct a table of the following form to describe the
+sequence of steps that a top-down parser might use to parse the input
+string "a|(bc)*" as a regular expression.  (I suggest using the letters R
+and L as convenient shorthands for "regexp", and LETTER, respectively!)
+
+  Remaining input   |  Goal Stack             | Action
+  ------------------+-------------------------+--------------
+   a|(bc)*          |  _ R                    | R -> R|R
+  ------------------+-------------------------+--------------
+   a|(bc)*          |  _ R|R                  | R -> L 
+  ------------------+-------------------------+--------------
+   a|(bc)*          |  _ L|R                  | match
+  ------------------+-------------------------+--------------
+   |(bc)*           |  _ |R                   |  MATCH
+  ------------------+-------------------------+--------------
+   (bc)*            |  _ R                    | R -> R*
+  ------------------+-------------------------+--------------
+   (bc)*            |  _ (R)*                 | R -> (R)               
+  ------------------+-------------------------+--------------
+   bc)*             |  _ (R)*                 | match
+  ------------------+-------------------------+--------------
+   bc)*             |  _ R)*                  | R -> RR
+  -----------------------------------------------------------
+   bc)*             |  _RR)*                  | R-> L
+  -----------------------------------------------------------
+   bc)*             |  _ LR)*                 | MATCH
+  -----------------------------------------------------------
+   C)*              |  _R)*                   | R->L
+  -----------------------------------------------------------
+   C)*              |  _ L)*                  | MATCH
+  -----------------------------------------------------------
+   )*               |  _ )*                   | MATCH
+  -----------------------------------------------------------
+   *                |  _ *                    | MATCH
+  -----------------------------------------------------------
+                    |  _                      | ACCEPT
+
+
+  [Add more rows as you need them!]
+
+Valid entries in the "Action" column at each stage will be one of the
+following:
+
+- A specific production from the grammar that will be used to rewrite
+  the symbol on the top of the goal stack
+
+- The word "match", indicating that the token on the top of the goal
+  stack matches the token at the start of the remaining input
+
+- The word "accept", if the parsing process has reached a successful
+  conclusion
+
+- The word "error", if the parsing process has failed.  (Hint: you
+  shouldn't need to use "error" in this particular exercise!)
+
+------------------------------------------------------------------------
+EXERCISE 6: Repeat the previous exercise but assuming that a bottom-up 
+parsing process is used.  Note that this requires an adjustment to the
+columns that we used in the previous example.
+
+  Workspace         |  Remaining input        | Action
+  ------------------+-------------------------+--------------
+                    |  a|(bc)*                | SHIFT
+  ------------------+-------------------------+--------------
+  a                 |  |(bc)*                 | REDUCE
+  ------------------+-------------------------+--------------
+  a                 |  |(bc)*                 | SHIFT
+  ------------------+-------------------------+--------------
+  R                 |  (bc)*                  | SHIFT
+  ------------------+-------------------------+--------------
+  R|                |  c)*                    | SHIFT
+  ------------------+-------------------------+--------------
+  R|(               |  c)*                    | REDUCE
+  ------------------+-------------------------+--------------
+  R|(b              |  )*                     | SHIFT
+  ------------------+-------------------------+--------------
+  R|(R              |  )*                     | REDUCE
+  ------------------+-------------------------+--------------
+  R|(R              |  )*                     | SHIFT
+  ------------------+-------------------------+--------------
+  R|(RR             |    *                    | SHIFT
+  ----------------------------------------------------------
+  R|(R              |   *                     |
+  ------------------+-------------------------+--------------
+  R|(R              |   *                     |
+  ------------------+-------------------------+--------------
+  R|(RR             |                         |
+
+  [Add more rows as you need them!]
+
+In this case, the items in the "Action" column should be one of the
+following:
+
+- "Shift", indicating that the first token in the remaining input will
+  be moved in to the parser's workspace.
+
+- "Reduce", together with a production from the grammar, indicating
+  that the right hand side of the production matches the rightmost
+  section of the parser's workspace.
+
+- "Accept", indicating that the parser has reached a successful
+  conclusion.
+
+- "Error", indicating that an error has been detected.  (Again, you
+  should not need to use this in the current example!)
+
+------------------------------------------------------------------------
+EXERCISE 7: At this point, you have spent some time familiarizing
+yourself with our grammar for regular expressions, and building a simple
+lexer for that language using javacc.  Now we turn our attention to
+building a full parser.
+
+As a first step, we will focus on building a program called RegExpParser
+to check for valid regular expression syntax; this will help to make
+sure we have a workable grammar.  As a starting point, adapt Example.jj
+from Step 17 of Lab 3 to use the following grammar, together with the
+lexical analysis code that you produced for EXERCISE 2.
+
+void Top() : { } {
+  R() <EOF>
+}
+
+void R() : { } {
+   ( "%"
+   | <LETTER>
+   | R() "|" R()
+   | R() R()
+   | R() "*"
+   | "(" R() ")" )
+}
+
+This program uses an almost direct translation of the original grammar
+in to the notation of javacc ... but do not expect it to work yet: what
+goes wrong, and why?
+
+------------------------------------------------------------------------
+EXERCISE 8: Construct a new version of the original grammar for regular
+expressions that recognizes the same language, but assumes the following
+fixities for each of the operators:
+
+- The "|" operator has low precedence and groups to the right.
+- Sequencing has middle precedence and also groups to the right.
+- The "*" operator has high precedence.
+- Parentheses are used, as normal, to provide explicit grouping.
+
+For example, following these rules, we would expect:
+
+   a|b|c    will be treated in the same way as   a|(b|c)
+   a|bc       "   "    "     "  "    "   "   "   a|(bc)
+   ab|c       "   "    "     "  "    "   "   "   (ab)|c
+   a|bc*      "   "    "     "  "    "   "   "   a|(b(c*))
+   a|(bc)*    "   "    "     "  "    "   "   "   a|((bc)*)
+
+You are encouraged to follow the patterns that we have seen in the
+previous lab, as well as the Week 4 lecture, for expressing precedence
+and fixity information in the structure of a grammar.  (For arithmetic
+expressions, we can think of an expression as a "sum of products" and a
+product as a "product of atoms", etc.  What are the analogs of this for
+regular expressions, according to the rules above?)
+
+To test your answer, modify your code from EXERCISE 7 to use the new
+grammar.  Verify that your program compiles correctly and that it
+correctly accepts or rejects each of the examples listed in EXERCISE 3.
+
+------------------------------------------------------------------------
+INTERLUDE: To complete the construction of a parser, we'll need some way
+to represent abstract syntax trees.  Code for this is provided by the
+files in the regexp package.  To gain access to these files in your
+javacc program, you will need to add the line:
+
+import regexp.*;
+
+after the PARSER_BEGIN line in your javacc source file.  The following
+notes provide a guide to the Java source files in the regexp folder.
+Have no fear, we'll get back to exercises shortly ...
+
+Representing NFAs and DFAs:
+---------------------------
+The regexp folder includes a small number of files that are used to
+represent states and transitions in NFAs and DFAs (the State and
+Transition classes, respectively), together with some classes (DFATrans
+and SubsetConstruction) that are used to implement standard algorithms
+for converting NFAs into DFAs.  We will not concern ourselves with the
+details of these classes, except to note how they can be used to
+construct and display NFAs and DFAs.
+
+The construction of a new state (which corresponds to drawing a blob
+representing a finite automaton state) is described by using statements
+of the form:
+
+   State n = new State();
+
+From here, we can add transitions from n to other states (which
+corresponds to drawing edges between states) by specifying an
+appropriate array of Transition values:
+
+   n.trans = new Transition[] {
+               new Transition(s1),     // epsilon transition to s1
+               new Transition(c, s2)   // transition on c from n to s2
+             };
+
+Note that there are two forms of transition.  The one argument form
+represents an epsilon transition with the target state as its sole
+argument.  The two argument form, instead, specifies a target as its
+second argument, with the first argument providing the integer code for
+the character associated with the transition.  Of course, if we want to
+attach a different number of transitions to the state, we just need a
+different number of entries in the array.
+
+Finally, we can mark a state as an accept state by setting its accept
+field to any non-zero integer:
+
+    n.accept = 1;     // mark this as an accept state.
+
+(If you don't specify a value for accept, then 0, indicating a non
+accept state, is assumed.)
+
+Here, for example, is some code that will construct an NFA with three
+states, p, q, and r:
+
+    State r  = new State();       // An accept state with no transitions
+    r.trans  = new Transition[0];  
+    r.accept = 1;
+
+    State q  = new State();
+    q.trans  = new Transition[] { // Transition to r on input 'a'
+                 new Transition('a', r)
+               };
+
+    State p  = new State();
+    p.trans  = new Transition[] { // Epsilon transitions to q and r
+                 new Transition(q),
+                 new Transition(r)
+               };
+
+To understand what is going on here, you might want to step through this
+sequence of commands, building up a picture of the automaton as it is
+constructed.
+
+If we take p as the start state for our automaton, we can find and
+display the set of all states in the resulting machine by using the
+following commands:
+
+    System.out.println("NFA: --------------");
+    State[] nfaStates = p.reachableStates();
+    State.display(nfaStates);
+
+Construction of the corresponding DFA is also easy to express (all of
+the details are taken care of in the SubsetConstruction and DFATrans
+classes):
+
+    // Find and display the corresponding DFA:
+    System.out.println("DFA: --------------");
+    State[] dfaStates = State.toDFA(nfaStates);
+    State.display(dfaStates);
+
+The regexp folder also includes a class called DotOutput that can be
+used to generate graphical descriptions of the generated machines using
+the Graphviz tools.  Following on from the code above, we just need to
+add the following two lines:
+
+    DotOutput.toDot(nfaStates, "nfa.dot");
+    DotOutput.toDot(dfaStates, "dfa.dot");
+
+All of the above code is included in regexp/Demo.java, which can be
+compiled and executed using the following commands:
+
+    javac regexp/*.java
+    java regexp.Demo
+
+Once the program has finished and we are back at the command line, we
+can use the following commands to turn the generated dot files into
+viewable pdf files:
+
+    dot -Tpdf nfa.dot -o nfa.pdf
+    dot -Tpdf dfa.dot -o dfa.pdf
+
+Abstract Syntax Trees for Regular Expressions:
+----------------------------------------------
+The regexp folder also includes a number of Java classes that can be
+used to represent (abstract syntax trees for) regular expressions.  The
+six classes that are used for this are shown in the following diagram,
+which shows one "base" class called RegExp and five subclasses (Epsilon,
+Char, Alt, Seq, and Rep) that represent specific forms of regular
+expression (matching the empty string, single characters, alternatives,
+sequences, and repetitions, respectively).
+
+  RegExp --+-- Epsilon   -- new Epsilon()  corresponds to regexp %
+           |
+           +-- Char      -- new Char(c)    corresponds to regexp c
+           |
+           +-- Alt       -- new Alt(r1,r2) corresponds to r1|r2
+           |
+           +-- Seq       -- new Seq(r1,r2) corresponds to r1 r2
+           |
+           +-- Rep       -- new Rep(r)     corresponds to r*
+
+The RegExp class itself is "abstract" meaning that it specifies common
+behavior (in the form of "abstract" Java methods) for all of its
+subclasses, but leaves the task of providing specific implementation
+for those methods to individual subclasses.  This is appropriate
+because the code that is needed, for example, to display a specific
+form of regular expression, or to generate a corresponding NFA, will
+vary from one form of regexp to the next.
+
+In particular, if r is a RegExp value, then:
+
+  r.fullParens() will return a string with a printable, fully
+  parenthesized description of the regular expression r.
+
+  r.toDot(filename) will output a DOT description of the AST for r in
+  the named file.
+
+  r.toNFA(s) will construct an NFA whose purpose is to match the regular
+  expression r and then transition to the follow-on state s.
+
+To illustrate how these methods work in practice, the following code
+shows how we can construct an NFA for the regular expression (a|b)*:
+
+    RegExp r = new Rep(new Alt(new Char('a'), new Char('b')));
+
+    // Print out in fully parenthesized form:
+    System.out.println("r = " + r. fullParens());
+
+    // Generate a dot version of the AST:
+    r.toDot("ast.dot");
+
+    // Generate an NFA, capturing the start state in p, and
+    // terminating in an accept state, done, with no transitions.
+    State done  = new State();
+    done.accept = 1;
+    done.trans  = new Transition[0];
+    State p     = r.toNFA(done);
+
+    // Generate an NFA, and then a DFA:
+    State[] nfaStates = p.reachableStates();
+    State[] dfaStates = State.toDFA(nfaStates);
+
+From this point, we can view the generated NFA and DFA structures using
+the same State.display() and DotOutput.toDot() methods that we saw
+previously.  For those wanting to explore and experiment further, the
+code shown here is included in the file regexp/RegExpDemo.java.
+
+------------------------------------------------------------------------
+EXERCISE 9: Now, at last, we get to build a full parser.  This requires
+the addition of some embedded Java actions in your javacc code; remember
+that this can be accomplished by inserting the appropriate fragments of
+Java code, enclosed in braces, at the appropriate points in your javacc
+description of the grammar.  In the process, you'll also need:
+
+- to change the return type of your parsing functions to RegExp.
+
+- to introduce some local variables, as appropriate, between the
+  first pair of braces in each javacc parsing function definition.
+
+- to add assignments, such as r=R(), that capture the results that
+  are produced by calls to other parsing functions.
+
+For example, you might end up with some code that looks a little bit
+like this:
+
+RegExp Atom() : { RegExp r; Token t; } {
+  ("%"           {return new Epsilon();})
+| (t=<LETTER>    {return new Char((int)t.image.charAt(0));})
+| ("(" r=R() ")" {return r;})
+}
+
+[IMPLEMENTATION ASIDE: For the single character case, Char, seen above,
+you have a Token value, t, whose lexeme, t.image, is a string
+containing a single character.  The constructor for the Char class,
+however, requires a single integer code.  For those who don't have
+detailed knowledge of standard Java libraries, it will probably be
+useful to point out that you can find the appropriate integer code in a
+situation like this by using the expression (int)t.image.charAt(0).]
+
+To check that your solution is correct, make sure that you can compile
+it (run javacc on the .jj source file, and then javac on the generated
+Java code), and test it on the examples from EXERCISE 3.  For further
+entertainment, add some of the code fragments shown in the INTERLUDE
+above to construct dot versions of the AST, NFA, and DFA for the input
+regular expression.  Mightn't this have been a handy tool to have had
+when you were taking CS 311? :-)
+
+------------------------------------------------------------------------
+IDEAS FOR THOSE WISHING TO TAKE THIS FURTHER:
+
+- Extend your lexer to support a broader range of LETTER characters,
+  including upper case letters, digits, and escape sequences like \*
+  and \( so that those characters can be matched and not given the
+  special interpretation that might otherwise be expected when those
+  characters appear in a regular expression.
+
+- Add support for regular expressions of the form r? and/or r+.  You'll
+  need to extend the lexer and grammar as appropriate and you will also
+  need to provide new abstract syntax classes in each case; for the
+  latter, you'll find that the Rep class is a good starting point that
+  can be modified to suit your needs ...
+
+------------------------------------------------------------------------

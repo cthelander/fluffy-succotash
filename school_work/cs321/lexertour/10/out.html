@@ -1,0 +1,175 @@
+<html>
+<head>
+<title>My AutoLight Web Page</title>
+<style type="text/css">
+  body     {white-space:pre;
+            background-color:#ffffcc;
+            color:black;
+            font-family:"Lucida Console","Courier New",Monotype}
+</style>
+</head>
+<body>
+One of the difficulties of using English to document technical details
+(such as the descriptions of various forms of textual patterns in this
+question) is that the use of natural language frequently results in
+ambiguous, or incomplete specifications.  One of the purposes of this
+exercise, even though it will likely result in some frustration, is to
+reinforce that point!  One of the purposes of distributing this test
+file is to reduce that frustration by giving you some concrtete examples
+that you can use to test your program.  That said, this file doesn't
+test all possibilities either, so you are strongly encouraged to test
+your solution with examples other than the ones shown here.
+Nevertheless, if your program produces the same output for this input
+file as the sample solution, then your solution is probably in good
+shape ...
+
+Be warned that what follows is really just a collection of examples
+and test cases collected together in a sample file; it isn't meant to
+be read as a coherent document in its own right.
+
+
+Examples using times written in 12 hour formats:
+------------------------------------------------
+The question mentions times like <a href="clock://12:30 ">12:30 </a>or <a href="clock://4:59pm">4:59pm</a> that should be matched.
+You might want to try some additional simple examples of this kind!
+
+We might also try some variants with different am/pm  suffixes.  (Of
+course, the am/pm parts shouldn't match when they appear without a
+time.)
+
+    <a href="clock://12:00pm">12:00pm</a>   <a href="clock://12:01am">12:01am</a>
+    <a href="clock://12:02p.m.">12:02p.m.</a> <a href="clock://12:03a.m.">12:03a.m.</a>
+    <a href="clock://12:01">12:01</a>.am  <a href="clock://12:03">12:03</a>abmn
+
+How about some examples with mixed upper and lower case?  Maybe some odd
+looking things like the following:
+
+    <a href="clock://11:00pm">11:00pm</a> <a href="clock://11:01Pm">11:01Pm</a> <a href="clock://11:02pM">11:02pM</a> <a href="clock://11:03PM">11:03PM</a>
+
+Now we might begin to wonder if it was a good idea to allow for mixtures
+of upper and lower case.  But if that's what the customer wants ... :-)
+
+And what if there are spaces between the number and the suffix?  Maybe
+even multiple spaces and tabs, etc.?
+
+<a href="clock://10:15 am">10:15 am</a>, <a href="clock://10:16 PM">10:16 PM</a>, <a href="clock://10:17 a.m.">10:17 a.m.</a>, <a href="clock://10:18
+pm">10:18
+pm</a>, <a href="clock://3:45    am">3:45    am</a>; <a href="clock://2:15    p.m.">2:15    p.m.</a>;  <a href="clock://7:19 ">7:19 </a>bcd; <a href="clock://12:00
+
+am">12:00
+
+am</a>. etc...
+
+The question says that no part of the following strings should be
+matched because these strings do not correspond to valid times:
+  16:9   4:3  1:100   1:60   25:00
+
+Adding spaces there shouldn't make a difference either:
+  16 : 9   4 : 3  1 : 100   1 : 60   25 : 00
+
+Even if we change to numbers in the correct range, the results still
+shouldn't be matched:
+
+  10 : 19  4 : 30  1 : 10  1: 59  2 :50
+
+But if we remove some of those spaces ...
+
+  <a href="clock://10:19  ">10:19  </a><a href="clock://4:30  ">4:30  </a><a href="clock://1:10  ">1:10  </a><a href="clock://1:59  ">1:59  </a><a href="clock://2:50
+
+">2:50
+
+</a>Ok, enough!  Let's try something new ... 
+
+
+Examples using times written in 24 hour formats:
+------------------------------------------------
+This time, the question mentions valid times like <a href="clock://1230 ">1230 </a>and <a href="clock://1659">1659</a>, so we
+had better accept those.  But we shouldn't be matching any part of a
+numeric value like 123, 3206, or 12345 because those strings of numbers
+do not meet the constraints that we need for a valid 24 hour time
+string.  (Did somebody say 24:00 hours?  Or was that <a href="clock://0:00">0:00</a>?)
+
+That doesn't look like a lot of test cases; you might want to try a few
+more to make sure your solution is working ...
+
+
+Examples of email addresses:
+----------------------------
+To quote from the question:
+
+  Thus <a href="mailto://samuel@pdx.edu">samuel@pdx.edu</a>, samantha@project.cs.pdx.edu, and
+  sam+<a href="mailto://sam@our_home-domain.com">sam@our_home-domain.com</a> are valid email addresses, but no part of
+  sammy@a.b.c.d.e and _<a href="mailto://samma@thesams.net">samma@thesams.net</a> will be matched.
+
+Except that, as noted in one of the D2L discussion forums, the last
+example is actually valid (because underscores are included in the set
+of characters that can be used in an email name) and so it will (or at
+least should) be matched after all.
+
+If you read the description in the question carefully, there are some
+other properties of solutions that you'll probably want to test.  For
+example, do we allow periods in the name portion of an email, but
+prohibit exclamation marks?
+
+   <a href="http://ho.hum">ho.hum</a>@<a href="http://pdx.edu">pdx.edu</a>
+   yes!no!@<a href="http://google.com">google.com</a>
+   maybe!<a href="mailto://ornot@woogle.com">ornot@woogle.com</a>
+
+It would appear so (if you get the same results as me) ...  But don't
+forget to check your solution against the other properties listed in the
+question ...
+
+
+Website addresses:
+------------------
+Here are some examples from the question, with a few extras thrown in
+for good measure:
+
+   Should match:
+     "<a href="http://pdx.edu">pdx.edu</a>"
+     "<a href="http://cs.pdx.edu">http://cs.pdx.edu</a>"
+     "<a href="https://google.com">https://google.com</a>"
+     "<a href="http://a.com">a.com</a>"
+     "<a href="http://a.b.com">a.b.com</a>"
+     "<a href="http://a.b.c.com">a.b.c.com</a>"
+     "<a href="http://pdx.edu/sample/solutions">http://pdx.edu/sample/solutions</a>"
+     "<a href="http://w.w.com/a/">w.w.com/a/</a>"
+
+   Should not match:
+     "http://"           (missing domain)
+     "https://"          (missing domain)
+     "http:///pdx.edu"   (too many slashes)
+     "a.b.c.d.e"         (too many components)
+     "nothttp://foo.bar" (invalid prefix)
+
+   Let's try some of these without the quotes, just in case:
+     <a href="http://pdx.edu">pdx.edu</a>, <a href="http://cs.pdx.edu">http://cs.pdx.edu</a>, <a href="http://a.com">a.com</a>, <a href="http://a.b.c.com">a.b.c.com</a>
+     <a href="http://pdx.edu/sample/solutions">http://pdx.edu/sample/solutions</a>, <a href="http://w.w.com/a/">w.w.com/a/</a>
+     https://, http:///pdx.edu, a.b.c.d.e, nothttp://foo.bar
+
+Notice that following the description in the question will give us the
+match we expect for a sentence like "Go to <a href="http://google.com">google.com</a>.", highlighting a
+domain name followed by a period.  On the other hand, you might like to
+advise your customer that this behavior will give the wrong treatment
+for abbreviations like <a href="http://i.e">i.e</a>., <a href="http://e.g">e.g</a>., or <a href="http://a.k.a">a.k.a</a>.  Perhaps they will want to
+revise their specification to address cases like this in a different
+way, and to recognize your observation of this special case with an
+appropriate bonus when they pay your invoice :-)
+
+
+Internet protocol addresses:
+----------------------------
+According to the question, "<a href="ping://192.168.0.1">192.168.0.1</a>", "<a href="ping://192.168.0.001">192.168.0.001</a>", and
+"<a href="ping://131.23.45.12">131.23.45.12</a>" should be treated as valid IPv4 addresses, but no part of
+"1.2", "1.2.3.4.1", "1.256.7.8" and "1.1000.65.34" should be matched.
+
+(Note that 1.1030.203.10 does not produce any matches, despite the fact
+that it includes something that would match the 24 hour time format,
+specifically "<a href="clock://1030">1030</a>" ... and that latter one should have matched!)
+
+<a href="http://P.S">P.S</a>.  Just a quick reminder that you'll still need to do the right
+thing with any &lt;, &gt;, or &amp; symbols that appear in the input.  But
+it is easier to do that for AutoLight than it was for MiniColor!
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+// 04 Token objects contain information about the position of a
+//    token in the input stream, and they can be passed as arguments
+//    to other functions.
+
+//-- Define a program that consumes tokens: ----------------------------------
+
+PARSER_BEGIN(Example)
+
+public class Example {
+  public static void main(String args[]) throws ParseException {
+    new Example(System.in);  // Read from standard input
+    while (getNextToken().kind!=EOF) {
+      System.out.println(describe(token));
+    }
+    System.out.println("Last token has been read");
+  }
+
+  static String describe(Token t) {
+    switch (t.kind) {
+      case LETTER  : return "LETTER(" + t.image + ")";
+      case OPEN    : return "OPEN(" + t.image + ")";
+      case CLOSE   : return "CLOSE(" + t.image + ")";
+      case EMPTY   : return "EMPTY(" + t.image + ")";
+      case STAR    : return "STAR" + t.image + ")";
+      case OR      : return "OR(" + t.image + ")";
+      default      : return "UNKNOWN(" + t.kind + "," + t.image + ")";
+    }
+  }
+}
+
+PARSER_END(Example)
+
+//-- Define the lexical structure of an input language: ----------------------
+
+// Input elements that should be ignored/skipped:
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+// Lexemes that should be reported as valid tokens:
+
+TOKEN : {
+  <OPEN    : "(">
+| <CLOSE   : ")">
+| <LETTER : ["A"-"Z","a"-"z"]>
+| <EMPTY   : "%">
+| <STAR    : "*">
+| <OR      : "|">
+}

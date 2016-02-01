@@ -1,0 +1,58 @@
+PARSER_BEGIN(Parser)
+import ast.*;
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Stmt s = Top();
+       new IndentOutput(System.out).indent(s);
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+Stmt Top(): { Stmt s; } {
+  s=Stmt() <EOF> { return s; }
+}
+
+Stmt Stmt(): { ... } {
+  ...
+}
+
+Stmt Block(): { Stmt[] stmts; } {
+  "{" stmts=Stmts(0) "}"
+  { return new Block(stmts); }
+}
+
+Stmt[] Stmts(int soFar): { Stmt s; Stmt[] stmts; } {
+  (s=Stmt() stmts=Stmts(soFar+1)
+    { stmts[soFar]=s; return stmts; }
+  | { return new Stmt[soFar]; })
+}
+
+...
+
+Type Type(): { } {
+  ( "int"     { return Type.INT; }
+  | "boolean" { return Type.BOOLEAN; })
+}
+
+Expr Expr(): { ... } {
+  ...
+}
+
+...
+
+//- Lexical Rules -----------------------------------------------------
+
+...
+

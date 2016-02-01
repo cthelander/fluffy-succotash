@@ -1,0 +1,48 @@
+PARSER_BEGIN(Parser)
+
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Top();
+       System.out.println("Valid syntax");
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+void Top(): { } {
+  TopDefs() <EOF>
+}
+
+void TopDefs(): { } {
+  ...
+}
+
+...
+
+void Stmt(): { } {
+  ...
+}
+
+...
+
+void Expr(): { } {
+  ...
+}
+
+...
+
+//- Lexical Rules -----------------------------------------------------
+
+...
+

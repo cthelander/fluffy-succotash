@@ -1,0 +1,61 @@
+PARSER_BEGIN(Parser)
+
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Top();
+       System.out.println("Valid syntax");
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+void Top(): { } {
+  Expr() <EOF> }
+void Expr(): { } {
+    O() }
+void O(): { } {
+    A() ( "||" A())* }
+void A(): { } {
+    C() ( "&&" C())* }
+void C(): { } {
+    S() (( "<" S()) | ( "<=" S()) | ( ">" S()) | ( ">=" S()) | ( "==" S()) | ("!=" S()))? }
+void S(): { } {
+    M() ( ("+" M()) | ("-" M()))* }
+void M(): { } {
+    P() (("*" P()) | ("/" P()))* }
+void P(): { } {
+   "(" O() ")"  |  I() }
+void I(): { } {
+<INTLIT> | <IDENT>
+}
+//- Lexical Rules -----------------------------------------------------
+
+
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+| <"/*" (~["*"])* ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+
+TOKEN : {
+  <INTLIT    : (["0"-"9"])+>
+}
+
+TOKEN : {
+  <IDENT : ["a"-"z", "A"-"Z"] (["a"-"z","A"-"Z","0"-"9"])*>
+}

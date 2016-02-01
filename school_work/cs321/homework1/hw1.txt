@@ -1,0 +1,380 @@
+Carly Thelaner
+CS321 Winter term 2015
+Homework 1 - Warmup
+1/16/2015
+
+
+I will be using c++ and the gcc compiler
+
+1- One kind of error that is detected during source input;
+
+If the filename given is not an existing file then that would be an to be caught during source
+input. If the lexical analyzer doesn't recieve the correct, or any, input then it cannot do anything.
+
+Program:
+No program is needed to show this, because the error is when the file does not exist.
+
+Error:
+
+tcarly@ada:~/cs321/minitour/21$ gcc foobar
+gcc: error: foobar: No such file or directory
+gcc: fatal error: no input files
+compilation terminated.
+
+2- Two different kinds of error that are detected during lexical
+  analysis;
+
+Placing a non-english character in to a c++ program will cause an error in the lexical analyzer
+because it is not a recognized character, and will not be able to turn it into a token. This
+should be detected by the lexical analysis phase of the compiler because it is important for
+the parser to be able to recognize all of the characters when it attempts to turn them into an AST.
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    char letter = 嗨;
+    return 0;
+}
+
+Error:
+homework1.cpp:9:5: error: stray ‘\345’ in program
+     char letter = 嗨;
+     ^
+homework1.cpp:9:5: error: stray ‘\227’ in program
+homework1.cpp:9:5: error: stray ‘\250’ in program
+homework1.cpp: In function ‘int main()’:
+homework1.cpp:9:22: error: expected primary-expression before ‘;’ token
+     char letter = 嗨;
+
+
+If there are too many decimal points in a number then then lexical analyzer cannot recognize it as
+a number and therefore it causes an error. If the number can not be turned into a recognizable
+token the parser will not know how to put it into an AST so it is important that it be caught
+by the lexical analyzer. 
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int num = 4.44.44;
+    return 0;
+}
+
+Error:
+homework1.cpp:9:16: error: too many decimal points in number
+     int  num = 4.44.44;
+                ^
+3- Two different kinds of error that are detected by the parser;
+
+For the parser to build an AST, tokens from the lexical analyzer are put into the nodes of 
+the tree depending on what kind of token they are, so the tokens need be of the right type
+for the pareser to know where to put them. If a reserved word is used as an identifier the 
+parser does not know where to put it, such as the line below.
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    char char = 'r';
+    return 0;
+}
+
+Error:
+homework1.cpp: In function ‘int main()’:
+homework1.cpp:9:15: error: expected unqualified-id before ‘=’ token
+     char char = 'r';
+               ^
+
+The parser makes the AST by putting the operation as the root and its children as the operands
+for the expression. For the assignment operator the tree can only have a single operand on
+the left side of the operator. Because of this you cannot have an operation or 2 operands 
+on the left side of the assignment operator as below. 
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int num1, num2 = 0;
+    num1 + num2 = 3;
+    return 0;
+}
+
+Error:
+homework1.cpp: In function ‘int main()’:
+homework1.cpp:10:17: error: lvalue required as left operand of assignment
+     num1 + num2 = 3;
+                 ^
+
+4- Two different kinds of error that are detected during static
+   analysis (also known as semantic analysis).
+
+The semantic analyzer checks to make sure that all identifiers have been declared before they 
+are used. This is done at this point because it needs to know what type the identifier is for
+it to check to see if the semantics of the expression are correct.
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    num = 4;
+    return 0;
+}
+
+Error:
+homework1.cpp: In function ‘int main()’:
+homework1.cpp:9:5: error: ‘num’ was not declared in this scope
+     num = 4;
+     ^
+
+The Static analyzer is responsible for making sure that the AST built by the parser is
+correct so when the sides of an assignment statement are of different types the parser can
+build the tree because they are correct tokens, but the static analyzer does not accept them
+because the meaning of the expression is incorrect. 
+
+Program:
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    int num = "hello";
+    return 0;
+}
+
+Error:
+homework1.cpp: In function ‘int main()’:
+homework1.cpp:9:15: error: invalid conversion from ‘const char*’ to ‘int’ [-fpermissive]
+     int num = "hello";
+               ^
+
+5-
+a) [FIVE points] Explain how you can modify version 21 of the mini
+compiler to compile, validate, and run the mini program described
+above.  As a general guide, you will need to remove parts of
+Compiler.java that have to do with syntax analysis and add code to
+construct a specific abstract syntax tree instead.  Your answer
+should explain the specifics of what is needed, and include evidence
+of testing, including comments to justify that the test output you
+produce is correct.
+
+In order to modify the 21 version of the compiler to use the specific abstract syntax tree 
+given in the assignment a few parts of the compiler's code needs to be removed and the code
+to build the tree need to be added. I removed the lines of code that read in the file holding
+the code, that checked the source input, that lexically analyzed the code, and parsed the 
+code into an AST. The code I added was the provided code to build the specific AST for the
+program provided. To test this I ran the program before removing and adding the code on the 
+mini code program and then again after, and both programs printed the same number, 4950.
+
+Removed:
+      String     input  = args[0] + ".mini";
+      FileReader reader = new FileReader(input);
+      Source     source = new JavaSource(handler, input, reader);
+      MiniLexer  lexer  = new MiniLexer(handler, source);
+      MiniParser parser = new MiniParser(handler, lexer);
+      Stmt       prog   = parser.parseProgram();
+      if (handler.hasFailures()) {
+        throw new Failure("Aborting: errors detected during syntax analysis");
+      }
+
+Added:
+   Position pos = null;    // a dummy position
+
+   Id i         = new Id(pos,"i");    // Some identifiers
+   Id n         = new Id(pos,"n");
+   Id sum       = new Id(pos,"sum");
+
+   IntLit i0    = new IntLit(pos,0);  // Some integer literals
+   IntLit i1    = new IntLit(pos,1);
+   IntLit i100  = new IntLit(pos,100);
+
+   Stmt   s1    = new VarDecl(pos, Type.INT, new Id[]{sum,n,i});
+   Stmt   s2    = new Assign(pos, sum, i0);
+   Stmt   s3    = new Assign(pos, n, i100);
+   Stmt   s4    = new Assign(pos, i, i0);
+   Stmt   body1 = new Assign(pos, sum, new Add(pos, sum, i));
+   Stmt   body2 = new Assign(pos, i,   new Add(pos, i,   i1));
+   Stmt   body  = new Block(new Stmt[] {body1, body2});
+   Stmt   s5    = new While(pos, new Lt(null, i, n), body);
+   Stmt   s6    = new Print(pos, sum);
+   Stmt   prog  = new Block(new Stmt[]{s1, s2, s3, s4, s5, s6});
+
+b) [FIVE points] What mini program does the following AST represent:
+
+   Expr exp3  = new Mul(null, new Div(null, i, i3), i3);
+   Expr exp5  = new Mul(null, new Div(null, i, i5), i5);
+   Expr exp15 = new Mul(null, new Div(null, i, i15), i15);
+
+   Stmt prog = new Block(new Stmt[]{
+     new VarDecl(null, Type.INT, new Id[]{n,i}),
+     new Assign(null, n, i100),
+     new Assign(null, i, i1),
+     new While(null, new Lt(null, i, n),
+       new Block(new Stmt[]{
+         new If(null, new Eql(null, exp15, i),
+           new Print(null, i15),
+           new If(null, new Eql(null, exp5, i),
+             new Print(null, i5),
+             new If(null, new Eql(null, exp3, i),
+               new Print(null, i3),
+               new Assign(null, i, i)
+             )
+           )
+         ),
+         new Assign(null, i, new Add(null, i, i1))
+       })
+     )
+   });
+
+This mini program:
+
+int i, n;
+i = 1; 
+n = 100;
+
+while ( i < n)
+{
+    if(15 == ((i/15)*15))
+    {
+        print 15;
+    }
+    else if(5 == ((i/5)*5))
+    {
+        print 5;
+    }
+    else if(3 == ((i/3)*3))
+    {
+        print 3;
+    }
+    else
+    {
+        i = i;
+    }
+    i = i + 1;
+}
+
+c) [TWO points] Explain (using the syntax of mini) how you would
+write a program to calculate and print the factorial of a number
+stored in a variable called "n".  For example, a program of the
+following form:
+
+  int n, i, fact;
+  i = 1;
+  n = 10;
+  fact = 1;
+
+  while ( i < n )
+  {
+       fact = fact * (i + 1);
+       i = i + 1;
+  }
+  print fact;
+
+would print out the value of 10 factorial (i.e., the product of the
+numbers from 1 to 10, inclusive).
+
+
+d) [EIGHT points] Write Java code to construct an AST for the mini
+program that you wrote in answer to Part (c) above.  Show your code,
+and include evidence of testing to show that your program calculates
+valid factorials for at least ten different initial values of n. 
+
+   Position pos = null;    // a dummy position
+
+   Id i         = new Id(pos,"i");    // Some identifiers
+   Id n         = new Id(pos,"n");
+   Id fact      = new Id(pos,"fact");
+
+   IntLit i1    = new IntLit(pos,1);  // Some integer literals
+   IntLit i10   = new IntLit(pos,10);
+
+   Stmt   s1    = new VarDecl(pos, Type.INT, new Id[]{fact,n,i});
+   Stmt   s2    = new Assign(pos, i, i1);
+   Stmt   s3    = new Assign(pos, n, i10);
+   Stmt   s4    = new Assign(pos, fact, i1);
+   Stmt   body1 = new Assign(pos, fact, new Mult(pos, fact, new Add(pos, i, i1)));
+   Stmt   body2 = new Assign(pos, i, n {ew Add(pos, i, i1));
+   Stmt   body  = new Block(new Stmt[] {body1, body2});
+   Stmt   s5    = new While(pos, new Lt(null, i, n), body);
+   Stmt   s6    = new Print(pos, fact);
+   Stmt   prog  = new Block(new Stmt[]{s1, s2, s3, s4, s5, s6});
+
+
+To test this, I replaced the specific AST from part a with this factorial AST.
+I tested the inputs 2 through 10, and 15, by replacing the value of n and running
+the following commands after each change:
+
+tcarly@ada:~/cs321/minitour/21$ javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 3628800
+
+tcarly@ada:~/cs321/minitour/21$ javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 362880
+
+tcarly@ada:~/cs321/minitour/21$ javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 40320
+
+tcarly@ada:~/cs321/minitour/21$ javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 5040
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 720
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 120
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 24
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 6
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 2
+
+tcarly@ada:~/cs321/minitour/21$ !j
+javac Compiler.java && java Compiler test.mini && ./test.mini
+Assembly code output: test.mini.s
+Executable program: test.mini
+print: 2004310016
+tcarly@ada:~/cs321/minitour/21$ 
+
+
+
+
+
+
+
+

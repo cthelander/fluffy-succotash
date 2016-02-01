@@ -1,0 +1,316 @@
+//Carly Thelander
+
+PARSER_BEGIN(Parser)
+import ast.*;
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Defn[] program = Top();
+       new IndentOutput(System.out).indent(program);
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+//creates the program array and reads to end of file
+//symbol
+Defn[] Top(): { Defn[] program; } {
+    program = Program(0) <EOF>
+    { return program; }
+}
+
+//function for creating an array of defns to make up
+//the program 
+Defn[] Program(int soFar): { Defn d; Defn[] program; } {
+    d = Defn() program = Program(soFar+1)
+    { program[soFar] = d; return program; } | 
+    { return new Defn[soFar]; }
+}
+
+//call function that changes a call1 function to 
+//an ExprStmt from a StmtExpr
+ExprStmt Call(): { StmtExpr p; } {
+    p = Call1()
+    { return new ExprStmt(p); }
+}
+
+//function for creating function calls
+StmtExpr Call1(): { Token t; Expr[] s; } {
+    t = <IDENT> "(" s = Exprs(0) ")"
+    { return new Call(t.image, s); } 
+}
+
+//creates an array of exprs for the args for a 
+//function call
+Expr[] Exprs(int soFar): { Expr p; Expr[] s; } {
+    p = Expr()( "," s = Exprs(soFar + 1)
+    { s[soFar] = p; return s; })? 
+    { s = new Expr[soFar+1]; s[soFar] = p; return s; } 
+    | { return new Expr[soFar]; }
+}
+
+//function definition function that has a return type,
+//identifier an array of formals and a block
+Defn Func(): { Type r; Token n; Stmt b; Formal[] f; } {
+    r = RetType() n = <IDENT> f = Formal() b = Block()
+    { return new Function(r, n.image, f, b); } 
+}
+
+//return type function for the function def function 
+Type RetType(): { Type t; } {
+     ("void" 
+     { return null; })
+     | (t = Type()
+     { return t; }) 
+}
+
+//the formal function holds parenthesis with
+//an array of formals inside that is returned 
+//from the Formals function that calls itself 
+//recursivly creating a comma seperated array
+Formal[] Formal(): { Formal[] f; } { 
+    "(" f = Formals(0) ")" 
+    { return f; }
+}
+
+Formal[] Formals(int soFar): { Formal p; Formal[] f; } { 
+    p = Param()("," f = Formals(soFar + 1)
+    { f[soFar] = p; return f; })?
+    { f = new Formal[soFar+1]; f[soFar] = p; return f; }|
+    { return new Formal[soFar]; }
+}
+
+//parameter function for the function definition
+//gets a type and an identifier
+Formal Param(): { Type t; Token p; } {
+    t = Type() p = <IDENT>
+    { return new Formal(t, p.image); }
+}
+
+//definition function that calls either the 
+//globals function or the function
+//function
+Defn Defn(): { Defn e, b; } {
+    LOOKAHEAD(3)
+    (e = Glbl()
+    { return e; }) |
+    (b = Func()
+    { return b; }) 
+}
+
+//global variable definition function, calls type
+//and defs and gets an array of varIntros
+Defn Glbl(): { Type s; VarIntro[] v; } {
+    s =  Type()  v = Defs(1) ";"
+    { return new Globals(s, v); }
+}
+
+//statement function that calls print, block
+//if, while, return, empty, definition, empty
+//function call, or an assignment statement
+Stmt Stmt(): { Stmt s; } {
+    (s = Prnt()  |
+    s = Block() |
+    s = If()    |
+    s = Whl()   | 
+    s = Rtrn()  | 
+    s = Def()   |
+    s = Empt()  |
+    (LOOKAHEAD(2)
+    s = Call()  |
+    s = AssignStmt()))
+    { return s; } 
+}
+
+//empty stmt with just a semicolon
+Stmt Empt(): { } {
+    ";"
+    { return new Empty() ; }
+}
+
+//print statement function accepts print followed
+//by one an expression followed by a semicolon
+Stmt Prnt(): { Expr s; } {
+    "print" s = Expr() ";"
+    { return new Print(s); } 
+}
+
+//curly brackets with one or more stmts inside
+//from the stmts function  
+Stmt Block(): { Stmt[] s; } {
+    "{" s = Stmts(0) "}"
+    { return new Block(s); }
+}
+
+//if statement function accepts an if, followed
+//by parens with a comperison in the middle,
+//followed by a stmt and an else with a stmt
+//that is optional
+Stmt If(): { Stmt s, p; Expr t; } {
+    "if" "(" t = Expr()")" s = Stmt()
+    (LOOKAHEAD(1) 
+    ("else" p = Stmt()) 
+    { return new If(t, s, p); })?
+    { return new If(t, s); }
+}
+
+//while statement function accepts while followed
+//by parens with a comparison in the middle
+//followed by a stmt
+Stmt Whl(): { Stmt s; Expr t; } {
+    "while" "(" t = Expr() ")" s = Stmt() 
+    { return new While(t, s); }
+}
+
+//return statement function accepts return followed
+//by one an optional expression followed by a semicolon
+Stmt Rtrn(): { Expr s = null; } {
+    "return" (s = Expr())? ";"
+    { return new Return(s); }
+}
+
+//function for the Defs function that is called for each
+//variable introduction
+VarIntro Var(): { Token t; Expr m; }{
+    t = <IDENT> ("=" m = Expr()
+    { return new InitVarIntro(t.image, m); })?
+    { return new VarIntro(t.image); }
+}
+
+//variable definition function to be called
+//in the stmt function
+Stmt Def(): { Type s; VarIntro[] v; } {
+    s =  Type()  v = Defs(1) ";"
+    { return new Locals(s, v); }
+}
+
+//function for creating array of VarIntro objects
+//separated by commas and calls itself
+VarIntro[] Defs(int soFar): { VarIntro s; VarIntro[] v; } {
+    s = Var() ("," v = Defs(soFar + 1) 
+    { v[soFar - 1] = s; return v; })?
+    { v = new VarIntro[soFar]; v[soFar - 1] = s; return v; }
+}
+
+//function for creatin an array of stmt objects
+Stmt[] Stmts(int soFar): { Stmt s; Stmt[] stmts; } {
+    (s = Stmt() stmts = Stmts(soFar + 1)
+    { stmts[soFar] = s; return stmts; }
+    | { return new Stmt[soFar]; })
+}
+
+//chooses between int and boolean types
+Type Type(): { } {
+    ( "int"     { return Type.INT; }
+    | "boolean" { return Type.BOOLEAN; })
+}
+
+
+//changes the assign function call from a 
+//StmtExpr to an ExprStmt and adds the semicolon
+ExprStmt AssignStmt(): { StmtExpr e; } {
+    e = Assign() ";"
+    { return new ExprStmt(e); }
+}
+
+//assign statement function that puts an identifier
+//followed by an equals sign and an epression
+Assign Assign(): { Expr d; Token t; } {
+    t = <IDENT> "=" d = Expr()  
+    { return new Assign((t.image), d); }
+}
+
+//expression function that calls the assign
+//function or the boolean or
+Expr Expr(): { Expr e; } {
+    ( LOOKAHEAD(2)
+    e = Assign() | e = Or())
+    { return e; } 
+}
+
+//boolean or operation for expressions
+Expr Or(): { Expr e, d; } {
+    e =  And() ( "||" d = Or()
+    { e = new LOr(e, d); } )?
+    { return e; }
+}
+
+//boolean and operation for expressions
+Expr And(): { Expr e, d; } {
+    e = Com() ( "&&" d = And() 
+    { e = new LAnd(e, d); } )?
+    { return e; } 
+}
+
+//comparison operator functions for expressions including
+//less than, less than or equal to, greater than, greater
+//than or equal to, equal to, and not equal to.
+Expr Com(): { Expr e, d; } {
+    e = SubAdd() ((( "<" d = SubAdd()) { e = new Lt(e, d);  } )|
+    (( "<=" d = SubAdd()) { e = new Lte(e, d); } )|
+    (( ">"  d = SubAdd()) { e = new Gt(e, d);  } )|
+    (( ">=" d = SubAdd()) { e = new Gte(e, d); } )|
+    (( "==" d = SubAdd()) { e = new Eql(e, d); } )|
+    (( "!=" d = SubAdd()) { e = new Neq(e, d); }) )?
+    { return e; }
+}
+
+//function for adding and subtracting of expressions
+Expr SubAdd(): { Expr e, d; } {
+    e = MulDiv() ((("+" d = MulDiv()) { e = new Add(e, d); }) |
+    (("-" d = MulDiv()) { e = new Sub(e, d); }))*
+    { return e; }
+}
+
+//function for multiplying or dividing of atoms or other expressions. 
+Expr MulDiv(): { Expr e, d; } {
+    e = Atom() ((("*" d = Atom()) { e = new Mul(e, d); }) |
+    (("/" d = Atom()) { e = new Div(e, d); }))*
+    { return e; }
+}
+
+//bottom of the grammar which includes an expr in paretheses
+//and a function call, also the intlit and ident calls for
+//expressions
+Expr Atom(): { Expr e; Token t;} {
+    (LOOKAHEAD(2)
+    ( "(" e = Expr() ")"  | 
+    e = Call1()) { return e; } | 
+    t = <INTLIT> { return new IntLit(Integer.parseInt(t.image)); }| 
+    t = <IDENT>  { return new Id(t.image); })
+}
+
+
+//- Lexical Rules -----------------------------------------------------
+
+//skips all white space and comments
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+| <"/*" (~["*"])* ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+//token for the numbers 0 through 9 with one or more times
+TOKEN : {
+  <INTLIT : (["0"-"9"])+>
+}
+
+//identifier token made up of a letter followed by 
+//0 or more letters or numbers
+TOKEN : {
+  <IDENT : ["a"-"z", "A"-"Z"] (["a"-"z","A"-"Z","0"-"9"])*>
+}
+

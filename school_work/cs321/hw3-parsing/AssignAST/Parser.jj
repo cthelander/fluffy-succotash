@@ -1,0 +1,98 @@
+PARSER_BEGIN(Parser)
+import ast.*;
+public class Parser {
+  public static void main(String[] args) {
+     new Parser(System.in);
+     try {
+       Expr e = Top();
+       new IndentOutput(System.out).indent(e);
+     } catch (ParseException e) {
+       System.out.println("Invalid syntax at ("
+                          + token.beginColumn + ","
+                          + token.beginLine + "), "
+                          + token.image);
+     } catch (TokenMgrError e) {
+       System.out.println(e.getMessage());
+     }
+  }
+}
+PARSER_END(Parser)
+
+//- Parser Functions --------------------------------------------------
+
+Expr Top(): { Expr e; } 
+{
+  e = Expr() <EOF> { return e; }
+}
+Expr Expr(): {  Expr e, d; Token t;} 
+{
+LOOKAHEAD(2)
+      t = <IDENT> "=" d = Expr() 
+       { return new Assign((t.image), d); }
+       | e = O() { return e; } 
+}
+Expr O(): {  Expr e; Expr d;} 
+{
+  e =  A() ( "||" d = O(){ e = new LOr(e, d); } )?
+                         { return e; }
+}
+Expr A(): {  Expr e; Expr d;} 
+{
+  e = C() ( "&&" d = A() { e = new LAnd(e, d); } )?
+                         { return e; } 
+}
+Expr C(): {  Expr e; Expr d;} 
+{
+  e = S() ((( "<" d = S())   { e = new Lt(e, d);  } )|
+          (( "<=" d = S())   { e = new Lte(e, d); } )|
+          (( ">"  d = S())   { e = new Gt(e, d);  } )|
+          (( ">=" d = S())   { e = new Gte(e, d); } )|
+          (( "==" d = S())   { e = new Eql(e, d); } )|
+          (( "!=" d = S())   { e = new Neq(e, d); }) )?
+                             { return e; }
+}
+Expr S(): {  Expr e; Expr d;} 
+{
+  e = M() ( (("+" d = M())   { e = new Add(e, d); }) |
+            (("-" d = M())   { e = new Sub(e, d); }))*
+                             { return e; }
+}
+Expr M(): {  Expr e; Expr d;} 
+{
+  e = P() ( (("*" d = P())   { e = new Mul(e, d); }) |
+            (("/" d = P())   { e = new Div(e, d); }))*
+                             { return e; }
+}
+Expr P(): {  Expr e; Expr d;} 
+{
+  ( "(" e = Expr() ")"  | 
+        e = I()   )  { return e; } 
+}
+Expr I(): {  Expr e; Token t;} 
+{
+      t = <INTLIT>    { return new IntLit(Integer.parseInt(t.image)); }
+    | t = <IDENT>     { return new Id(t.image); }
+}
+
+
+//- Lexical Rules -----------------------------------------------------
+
+
+SKIP : {
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+| <"/*" (~["*"])* ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+
+TOKEN : {
+  <INTLIT    : (["0"-"9"])+>
+}
+
+TOKEN : {
+  <IDENT : ["a"-"z", "A"-"Z"] (["a"-"z","A"-"Z","0"-"9"])*>
+}
+

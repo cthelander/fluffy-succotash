@@ -1,0 +1,73 @@
+// Carly Thelander
+
+void main() 
+{
+    int local1 = 1;
+    int local2 = 2;
+    int local3 = 2;
+
+    while( local1 < 10 )
+    {
+        int local4 = 0;
+        while( local4 < local1 )
+        {
+            local2 = f( local2, local4 );
+            print h( g( local4));
+            local4 = 1 + local4;
+        }
+        print local2;
+        local2 = local2 * local3;
+        local1 = local1 + 1;
+    }
+    print local1;
+}
+
+int f( int arg1, int arg2 )
+{
+    int local1 = arg1 - arg2;
+    local1 = local1 * g( local1 );
+    return local1;
+}
+
+int g( int arg1 )
+{
+    return ( 2 * arg1) - arg1;
+}
+
+int h( int arg1)
+{
+    if( arg1 < 2 )
+    {
+        return 1;
+    }
+    else
+    {
+        return h( arg1 - 1) + h( arg1 - 2 );
+    }
+
+}
+
+
+/*   The original source program might differ from what
+     I wrote here in many ways such as the order of the
+     functions the names of the variable for sure and 
+     depending oh the optimizations used it might differ
+     in many other ways too.
+
+     Here are three different examples of poor code 
+     quality in the assembly code for sample.s:
+
+     1) In the function f the arguments are all moved into
+        registers then they are all pushed on to the stack 
+        the function g is called, once it returns the 
+        arguments are then poped back off. It would be more 
+        efficient if the function waited for g to return 
+        and then put into the registers.
+
+     2)
+
+
+     3)
+
+
+*/
